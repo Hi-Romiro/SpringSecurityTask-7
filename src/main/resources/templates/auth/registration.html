@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Registration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+<div style="text-align:right; margin:10px;">
+    <a th:href="@{/logout}" style="color: white; background-color: red; padding: 10px; text-decoration: none; border-radius: 5px;">Logout</a>
+</div>
+<h1>Registration</h1>
+<form th:action="@{/auth/registration}" th:object="${user}" method="post">
+    <div>
+        <label for="username">Username:</label>
+        <input type="text" th:field="*{username}" id="username"/>
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" th:field="*{password}" id="password"/>
+    </div>
+    <div>
+        <label for="roles">Roles:</label>
+        <select multiple th:field="*{roles}">
+            <option th:each="role : ${allRoles}" th:value="${role.id}" th:text="${role.name}"></option>
+        </select>
+    </div>
+    <button type="submit">Register</button>
+</form>
+</body>
+</html>
