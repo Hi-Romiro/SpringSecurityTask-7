@@ -11,6 +11,9 @@ import ru.itmentor.spring.boot_security.demo.repository.RoleRepository;
 import ru.itmentor.spring.boot_security.demo.repository.UserRepository;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Primary
@@ -52,10 +55,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Role> getAllRoles() {
-        return roleRepository.findAll();
+    public Set<Role> getRolesByName(List<String> roleNames) {
+        return roleNames.stream()
+                .map(roleRepository::findByName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
-
-
-
 }
+
+
