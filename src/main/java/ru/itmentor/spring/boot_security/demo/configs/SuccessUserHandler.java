@@ -17,27 +17,17 @@ public class SuccessUserHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication auth) throws IOException {
         Object userPrincipal = auth.getPrincipal();
-        Set<String> authorities = AuthorityUtils.authorityListToSet(auth.getAuthorities());
-        Integer id = null;
+        User user = userPrincipal instanceof User ? (User) userPrincipal : null;
 
-        if (userPrincipal instanceof User) {
-            id = ((User) userPrincipal).getId();
-        }
+        if (user != null) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
 
-        if (authorities.contains("ROLE_ADMIN")) {
-            response.sendRedirect("/admin");
+            String jsonResponse = String.format("{\"id\":%d,\"roles\":%s}", user.getId(), user.getAuthorities());
+            response.getWriter().write(jsonResponse);
+            response.getWriter().flush();
         } else {
-            if (authorities.contains("ROLE_USER")) {
-                if (id != null) {
-                    response.sendRedirect("/user/" + id);
-                } else {
-                    System.err.println("Error: Missing user ID");
-                    response.sendRedirect("/login?error=missing_user_id");
-                }
-            } else {
-                System.err.println("Error: No matching role found for user");
-                response.sendRedirect("/login");
-            }
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
         }
     }
 }
