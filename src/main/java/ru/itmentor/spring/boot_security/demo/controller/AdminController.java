@@ -1,17 +1,21 @@
 package ru.itmentor.spring.boot_security.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.itmentor.spring.boot_security.demo.dto.UserDTO;
 import ru.itmentor.spring.boot_security.demo.models.Role;
 import ru.itmentor.spring.boot_security.demo.models.User;
 import ru.itmentor.spring.boot_security.demo.service.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/admin")
+@RestController
+@RequestMapping("/api/admin")
 public class AdminController {
 
     private final UserService userService;
@@ -21,47 +25,52 @@ public class AdminController {
     }
 
 
-    @GetMapping
-    public String listUsers(Model model) {
-        model.addAttribute("users", userService.getAllUsers());
-        return "users";
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> users = userService.getAllUsers()
+                .stream()
+                .map(UserDTO::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
     }
 
 
-    @GetMapping("/new")
-    public String showAddUserForm(Model model) {
-        model.addAttribute("user", new User());
-        model.addAttribute("allRoles", userService.getAllRoles());
-        return "addUser";
-    }
-
-    @PostMapping("/new")
-    public String saveUser(@ModelAttribute("user") User user) {
-        userService.saveUser(user);
-        return "redirect:/admin";
-    }
-
-
-    @PatchMapping("/edit/{id}")
-    public String editUser(@ModelAttribute("user") User user) {
-        userService.saveUser(user);
-        return "redirect:/admin";
-    }
-
-
-    @GetMapping("/edit/{id}")
-    public String showEditUserForm(@PathVariable int id, Model model) {
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable int id) {
         User user = userService.getUser(id);
-        List<Role> roles = userService.getAllRoles();
-        model.addAttribute("user", user);
-        model.addAttribute("allRoles", roles);
-        return "editUser";
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(new UserDTO(user));
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
+        userService.saveUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new UserDTO(user));
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    public String deleteUser(@PathVariable int id) {
+    @PatchMapping("/users/{id}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable int id, @RequestBody User user) {
+        User existingUser = userService.getUser(id);
+        if (existingUser == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        user.setId(id); // Обязательно задаем ID, чтобы обновить существующую запись
+        userService.saveUser(user);
+        return ResponseEntity.ok(new UserDTO(user));
+    }
+
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<UserDTO> deleteUser(@PathVariable int id) {
+        User user = userService.getUser(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        UserDTO deletedUser = new UserDTO(user); // Создаём DTO до удаления
         userService.deleteUser(id);
-        return "redirect:/admin";
+        return ResponseEntity.ok(deletedUser);
     }
 }

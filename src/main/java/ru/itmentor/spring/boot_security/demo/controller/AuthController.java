@@ -3,16 +3,14 @@ package ru.itmentor.spring.boot_security.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import ru.itmentor.spring.boot_security.demo.dto.UserDTO;
 import ru.itmentor.spring.boot_security.demo.models.User;
 import ru.itmentor.spring.boot_security.demo.security.RegisterService;
 import ru.itmentor.spring.boot_security.demo.service.UserService;
 
-@Controller
-@RequestMapping("/auth")
+@RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final UserService userService;
@@ -30,15 +28,13 @@ public class AuthController {
     }
 
     @GetMapping("/registration")
-    public String registerPage(Model model) {
-        model.addAttribute("allRoles", userService.getAllRoles()); // Список доступных ролей
-        model.addAttribute("user", new User()); // Новый объект User для формы
-        return "auth/registration";
+    public UserDTO registerPage() {
+        return new UserDTO(new User());
     }
 
     @PostMapping("/registration")
     public String performRegistration(@ModelAttribute("user") User user) {
-        registerService.register(user);
-        return "redirect:/auth/login";
+        userService.saveUser(user);
+        return "User " + user.getUsername() + " registered successfully";
     }
 }

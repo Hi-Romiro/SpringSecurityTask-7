@@ -1,13 +1,14 @@
 package ru.itmentor.spring.boot_security.demo.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+import ru.itmentor.spring.boot_security.demo.dto.UserDTO;
 import ru.itmentor.spring.boot_security.demo.models.User;
 import ru.itmentor.spring.boot_security.demo.service.UserService;
 
-@Controller
+@RestController
 public class UserController {
 
     private final UserService userService;
@@ -21,10 +22,14 @@ public class UserController {
         return "index";
     }
 
-    @GetMapping("/user/{id}")
-    public String showUser(@PathVariable int id, Model model) {
-        User user = userService.getUser(id);
-        model.addAttribute("user", user);
-        return "showUser";
+    @GetMapping("/user/show/{id}")
+    public UserDTO showUser(@PathVariable int id, Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            if (id == user.getId()) {
+                return new UserDTO(userService.getUser(id));
+            }
+        }
+        return null;
     }
 }
